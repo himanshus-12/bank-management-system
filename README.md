@@ -60,6 +60,9 @@ python bank.py
 The project uses a JSON file named `data.json` to store account information. 
 The program loads existing records when it starts and updates the JSON file whenever account information changes.
 
+## Requiremnets
+No external dependencies required.
+
 ## Disclaimer
 
 This project was built for learning and practice purposes.
@@ -72,3 +75,4 @@ A small project to practise core Python concepts and understand how they work to
 ---
 
 **My first Python project. More improvements coming as I continue learning!**
+
