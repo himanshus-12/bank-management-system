@@ -15,6 +15,7 @@ class Bank:
                 data = json.load(fs)
         else:
             print("No such file exists")
+
     except Exception as err:
         print(f"An exception occurred as {err}")
 
@@ -27,55 +28,73 @@ class Bank:
     # Generate account number
     @classmethod
     def __accountgenerate(cls):
-        alpha = random.choices(string.ascii_letters, k=3)
-        num = random.choices(string.digits, k=3)
-        spchar = random.choices("!@#$%^&*", k=1)
-
-        id = alpha + num + spchar
-
-        random.shuffle(id)
-
-        return "".join(id)
+        while True:
+            alpha = random.choices(string.ascii_letters, k=3)
+            num = random.choices(string.digits, k=3)
+            spchar = random.choices("!@#$%^&*", k=1)
+    
+            id = alpha + num + spchar
+            random.shuffle(id)
+    
+            accountNo = "".join(id)
+    
+            if not any(i['accountNo'] == accountNo for i in cls.data):
+                return accountNo
 
     # Create account
     def Createaccount(self):
 
+        try:
+            name = input("Tell your name:- ").strip()
+            age = int(input("Tell your age:- "))
+            email = input("Tell your email:- ").strip()
+            pin = input("Tell your pin:- ")
+
+        except ValueError:
+            print("Invalid input. Please enter age correctly.")
+            return
+
         info = {
-            "name": input("Tell your name:- "),
-            "age": int(input("Tell your age:- ")),
-            "email": input("Tell your email:- "),
-            "pin": int(input("Tell your pin:- ")),
+            "name": name,
+            "age": age,
+            "email": email,
+            "pin": pin,
             "accountNo": Bank.__accountgenerate(),
             "balance": 0
         }
 
-        
         if (
-            info['age'] < 18
-            or len(str(info['pin'])) != 4
-            or "@" not in info['email']
+            not name                    
+            or age < 18                 
+            or age > 120
+            or len(pin) != 4
+            or not pin.isdigit()
+            or "@" not in email
+            or email.startswith("@")
+            or email.endswith("@")
         ):
             print("Sorry, you cannot create your account")
+            return
 
-        else:
-            print("\nAccount has been created successfully")
 
-            for i in info:
+
+        print("\nAccount has been created successfully")
+
+        for i in info:
+            if i != 'pin':
                 print(f"{i} : {info[i]}")
 
-            print("\nPlease note down your account number")
+        print("\nPlease note down your account number")
 
-            
-            Bank.data.append(info)
-
-           
-            Bank.__update()
+        Bank.data.append(info)
+        Bank.__update()
 
     # Deposit money
     def depositmoney(self):
 
         accnumber = input("Please enter your account number:- ")
-        pin = int(input("Please enter your pin:- "))
+        pin = input("Please enter your pin:- ")
+        
 
         userdata = [
             i for i in Bank.data
@@ -86,7 +105,11 @@ class Bank:
             print("Sorry, no data found")
 
         else:
-            amount = int(input("Enter amount to deposit:- "))
+            try:
+                amount = int(input("Enter amount to deposit:- "))
+            except ValueError:
+                print("Please enter a valid amount")
+                return
 
             if amount > 10000 or amount <= 0:
                 print(
@@ -101,9 +124,13 @@ class Bank:
 
                 print("Amount deposited successfully")
 
+
+    #Withdraw
+
     def withdraw(self):
+
         accnumber = input("Please enter your account number:- ")
-        pin = int(input("Please enter your pin:- "))
+        pin = input("Please enter your pin:- ")
 
         userdata = [
             i for i in Bank.data
@@ -114,7 +141,11 @@ class Bank:
             print("Sorry, no data found")
 
         else:
-            amount = int(input("Enter amount to withdraw:- "))
+            try:
+                amount = int(input("Enter amount to withdraw:- "))
+            except ValueError:
+                print("Please enter a valid amount")
+                return
 
             if amount > userdata[0]['balance'] or amount <= 0:
                 print(
@@ -133,7 +164,7 @@ class Bank:
 
     def showdetails(self):
         accnumber = input("Please enter your account number:- ")
-        pin = int(input("Please enter your pin:- "))
+        pin = input("Please enter your pin:- ")
 
         userdata = [
             i for i in Bank.data
@@ -145,15 +176,18 @@ class Bank:
 
         else:
             print("\nYour account details are as follows:")
+
             for i in userdata[0]:
-                print(f"{i} : {userdata[0][i]}")
+                if i != 'pin':
+                    print(f"{i} : {userdata[0][i]}")
 
 
-
-
+    #Update details
+    
     def update(self):
-        accnumber = input("please enter your account number:-")
-        pin = int(input("please enter your pin:-"))
+
+        accnumber = input("Please enter your account number:- ")
+        pin = input("Please enter your pin:- ")
 
         userdata = [
             i for i in Bank.data
@@ -165,23 +199,62 @@ class Bank:
 
         else:
             print("\nYour current account details are as follows:")
-            for i in userdata[0]:
-                print(f"{i} : {userdata[0][i]}")
 
-            # Ask user for the field to update
+            for i in userdata[0]:
+                if i != 'pin':
+                    print(f"{i} : {userdata[0][i]}")
+
             field = input("\nEnter the field you want to update:- ")
-            if field in userdata[0]:
-                new_value = input(f"Enter the new value for {field}:- ")
-                userdata[0][field] = new_value
-                Bank.__update()
-                print("Account details updated successfully")
-            else:
-                print("Invalid field. Please try again.")   
+
+            allowed_fields = ['name', 'age', 'email', 'pin']
+
+            if field not in allowed_fields:
+                print("Invalid field. Please try again.")
+                return
+
+            new_value = input(f"Enter the new value for {field}:- ").strip()
+
+            if field == 'name':
+                if not new_value:
+                    print("Name cannot be empty")
+                    return
+
+            elif field == 'age':
+                try:
+                    new_value = int(new_value)
+                except ValueError:
+                    print("Invalid age")
+                    return
+
+                if new_value < 18 or new_value > 120:
+                    print("Invalid age")
+                    return
+
+            elif field == 'email':
+                
+                if (
+                    "@" not in new_value
+                    or new_value.startswith("@")
+                    or new_value.endswith("@")
+                ):
+                    print("Invalid email")
+                    return
+
+            elif field == 'pin':
+                if len(new_value) != 4 or not new_value.isdigit():
+                    print("PIN must contain exactly 4 digits")
+                    return
+
+            userdata[0][field] = new_value
+
+            Bank.__update()
+
+            print("Account details updated successfully")   
 
 
     def delete(self):
         accnumber = input("Please enter your account number:- ")
-        pin = int(input("Please enter your pin:- "))
+        pin = input("Please enter your pin:- ")
 
         userdata = [
             i for i in Bank.data
@@ -192,19 +265,29 @@ class Bank:
             print("Sorry, no data found")
 
         else:
-            Bank.data.remove(userdata[0])
-            Bank.__update()
-            print("Account deleted successfully")
+            if userdata[0]['balance'] > 0:
+                print("Please withdraw your remaining balance before deleting.")
+                return
+
+            confirm = input("Are you sure you want to delete your account? (yes/no):- ")
+
+            if confirm.lower().strip() == 'yes':
+                Bank.data.remove(userdata[0])
+                Bank.__update()
+                print("Account deleted successfully")
+
+            else:
+                print("Account deletion cancelled")
 
 
 
-
+#DashBoard
 
 # Create Bank object
 user = Bank()
 
 
-#DashBoard
+# Dashboard
 while True:
 
     print("\n========== BANK MANAGEMENT SYSTEM ==========")
@@ -216,7 +299,12 @@ while True:
     print("Press 6 for deleting your account")
     print("Press 7 for exit")
 
-    check = int(input("Tell your response:- "))
+    try:
+        check = int(input("Tell your response:- "))
+
+    except ValueError:
+        print("Please enter a valid number")
+        continue
 
     if check == 1:
         user.Createaccount()
@@ -228,7 +316,7 @@ while True:
         user.withdraw()
 
     elif check == 4:
-        user.showdetails()  
+        user.showdetails()
 
     elif check == 5:
         user.update()
@@ -242,5 +330,6 @@ while True:
 
     else:
         print("Invalid choice. Please try again.")
+
 
 
